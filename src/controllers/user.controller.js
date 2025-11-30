@@ -162,7 +162,7 @@ export const handleUserSignUp = async (req, res, next) => {
  *       required: true
  *       content:
  *         application/json:
- *           schema:
+ *           schema: 
  *             type: object
  *             required:
  *               - store_name

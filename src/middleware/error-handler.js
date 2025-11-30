@@ -13,7 +13,7 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(
+  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
     isSuccess: false,
     code: StatusCodes.INTERNAL_SERVER_ERROR,
     message: "서버 내부 오류가 발생했습니다.",
