@@ -1,9 +1,9 @@
 import { StatusCodes } from "http-status-codes";
-import { bodyToUser } from "../dtos/user.dto.js";
+import { bodyToUser, bodyToUserUpdate } from "../dtos/user.dto.js";
 import { bodyToStore } from "../dtos/store.dto.js";
 import { bodyToReview } from "../dtos/review.dto.js";
 import { bodyToMission } from "../dtos/mission.dto.js";
-import { userSignUp, StoreAdd } from "../services/user.service.js";
+import { userSignUp, StoreAdd, updateUserProfile } from "../services/user.service.js";
 import { addReviewToStore } from "../services/review.service.js";
 import { addMissionToStore, startMissionForUser } from "../services/mission.service.js";
 import { successResponse } from "../utils/response.js";
@@ -552,6 +552,154 @@ export const handleStartMission = async (req, res, next) => {
     const missionId = req.params.missionId ? Number(req.params.missionId) : req.body.missionId;
     const result = await startMissionForUser({ userId, missionId });
     return successResponse(res, result, StatusCodes.CREATED);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * @swagger
+ * /api/v1/users/{userId}/profile:
+ *   patch:
+ *     summary: 사용자 프로필 수정
+ *     description: 구글 로그인 후 추가 정보(전화번호, 생일, 주소 등)를 입력하거나 기존 정보를 수정합니다.
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 사용자 ID
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "홍길동"
+ *               gender:
+ *                 type: string
+ *                 enum: [MALE, FEMALE]
+ *                 example: "MALE"
+ *               birth:
+ *                 type: string
+ *                 format: date
+ *                 example: "1990-01-01"
+ *               address:
+ *                 type: string
+ *                 example: "서울시 강남구"
+ *               detailAddress:
+ *                 type: string
+ *                 example: "역삼동 123-45"
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "010-1234-5678"
+ *     responses:
+ *       200:
+ *         description: 프로필 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: true
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "success"
+ *                 result:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     email:
+ *                       type: string
+ *                       example: "user@example.com"
+ *                     name:
+ *                       type: string
+ *                       example: "홍길동"
+ *                     gender:
+ *                       type: string
+ *                       example: "MALE"
+ *                     birth:
+ *                       type: string
+ *                       example: "1990-01-01"
+ *                     address:
+ *                       type: string
+ *                       example: "서울시 강남구"
+ *                     detailAddress:
+ *                       type: string
+ *                       example: "역삼동 123-45"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "010-1234-5678"
+ *       400:
+ *         description: 업데이트할 정보가 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "업데이트할 정보가 없습니다."
+ *       404:
+ *         description: 사용자를 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "사용자를 찾을 수 없습니다."
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                   example: false
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "데이터베이스 오류가 발생했습니다."
+ */
+export const handleUpdateProfile = async (req, res, next) => {
+  try {
+    console.log("프로필 수정 요청", req.params, req.body);
+
+    const userId = Number(req.params.userId);
+    const updates = bodyToUserUpdate(req.body);
+    const result = await updateUserProfile(userId, updates);
+    return successResponse(res, result, StatusCodes.OK);
   } catch (err) {
     next(err);
   }

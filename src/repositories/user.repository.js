@@ -101,3 +101,52 @@ export const getUserPreferencesByUserId = async (userId) => {
     conn.release();
   }
 };
+
+export const updateUser = async (userId, updates) => {
+  const conn = await pool.getConnection();
+
+  try {
+    const fields = [];
+    const values = [];
+
+    if (updates.name !== undefined) {
+      fields.push("name = ?");
+      values.push(updates.name);
+    }
+    if (updates.gender !== undefined) {
+      fields.push("gender = ?");
+      values.push(updates.gender);
+    }
+    if (updates.birth !== undefined) {
+      fields.push("birth = ?");
+      values.push(updates.birth);
+    }
+    if (updates.address !== undefined) {
+      fields.push("address = ?");
+      values.push(updates.address);
+    }
+    if (updates.detailAddress !== undefined) {
+      fields.push("detail_address = ?");
+      values.push(updates.detailAddress);
+    }
+    if (updates.phoneNumber !== undefined) {
+      fields.push("phone_number = ?");
+      values.push(updates.phoneNumber);
+    }
+
+    if (fields.length === 0) {
+      return null;
+    }
+
+    values.push(userId);
+    const query = `UPDATE user SET ${fields.join(", ")} WHERE id = ?;`;
+    await pool.query(query, values);
+
+    const [user] = await pool.query(`SELECT * FROM user WHERE id = ?;`, userId);
+    return user.length > 0 ? user[0] : null;
+  } catch (err) {
+    throw new DatabaseError(`사용자 정보 업데이트 중 데이터베이스 오류가 발생했습니다. (${err.message})`);
+  } finally {
+    conn.release();
+  }
+};

@@ -24,6 +24,16 @@ export const generateRefreshToken = (user) => {
 };
 
 // GoogleVerify 
+const isProfileComplete = (user) => {
+  return (
+    user.gender !== "추후 수정" &&
+    user.address !== "추후 수정" &&
+    user.detailAddress !== "추후 수정" &&
+    user.phoneNumber !== "추후 수정" &&
+    user.birth && user.birth.getFullYear() !== 1970
+  );
+};
+
 const googleVerify = async (profile) => {
   const email = profile.emails?.[0]?.value;
   if (!email) {
@@ -32,7 +42,12 @@ const googleVerify = async (profile) => {
 
   const user = await prisma.user.findFirst({ where: { email } });
   if (user !== null) {
-    return { id: user.id, email: user.email, name: user.name };
+    return { 
+      id: user.id, 
+      email: user.email, 
+      name: user.name,
+      isProfileComplete: isProfileComplete(user)
+    };
   }
 
   const created = await prisma.user.create({
@@ -47,7 +62,12 @@ const googleVerify = async (profile) => {
     },
   });
 
-  return { id: created.id, email: created.email, name: created.name };
+  return { 
+    id: created.id, 
+    email: created.email, 
+    name: created.name,
+    isProfileComplete: false
+  };
 };
 
 // GoogleStrategy 
@@ -63,18 +83,20 @@ export const googleStrategy = new GoogleStrategy(
 
   async (accessToken, refreshToken, profile, cb) => {
     try {
-     
       const user = await googleVerify(profile);
-      
       
       const jwtAccessToken = generateAccessToken(user);
       const jwtRefreshToken = generateRefreshToken(user);
 
-
-     
       return cb(null, {
         accessToken: jwtAccessToken,
         refreshToken: jwtRefreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        isProfileComplete: user.isProfileComplete,
       });
 
     } catch (err) {

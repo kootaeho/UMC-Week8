@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import { handleUserSignUp, handleStoreAdd, handleAddReview, handleAddMission, handleStartMission } from "./controllers/user.controller.js";
+import { handleUserSignUp, handleStoreAdd, handleAddReview, handleAddMission, handleStartMission, handleUpdateProfile } from "./controllers/user.controller.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { swaggerUi, specs } from "./config/swagger.config.js";
 import passport from "passport";
@@ -32,10 +32,11 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/v1/users/signup", handleUserSignUp);
-app.post("/api/v1/store/add", handleStoreAdd);
-app.post("/api/v1/stores/:storeId/reviews", handleAddReview);
-app.post("/api/v1/stores/:storeId/missions", handleAddMission);
-app.post("/api/v1/users/:userId/missions/:missionId/start", handleStartMission);
+app.patch("/api/v1/users/:userId/profile", isLogin, handleUpdateProfile);
+app.post("/api/v1/store/add", isLogin, handleStoreAdd);
+app.post("/api/v1/stores/:storeId/reviews", isLogin, handleAddReview);
+app.post("/api/v1/stores/:storeId/missions", isLogin, handleAddMission);
+app.post("/api/v1/users/:userId/missions/:missionId/start", isLogin, handleStartMission);
 
 app.use(errorHandler);
 
@@ -52,7 +53,7 @@ app.get('/mypage', isLogin, (req, res) => {
     result: { user: req.user },
   });
 });
-
+  
 app.get("/oauth2/login/google",
   passport.authenticate("google", {
     session: false,
@@ -66,14 +67,17 @@ app.get(
     failureRedirect: "/login-failed",
   }),
   (req, res) => {
-    const tokens = req.user; 
+    const authData = req.user;
 
     res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: {
-          message: "Google 로그인 성공!",
-          tokens: tokens, // { "accessToken": "...", "refreshToken": "..." }
+      isSuccess: true,
+      code: 200,
+      message: "Google 로그인 성공!",
+      result: {
+        accessToken: authData.accessToken,
+        refreshToken: authData.refreshToken,
+        user: authData.user,
+        isProfileComplete: authData.isProfileComplete,
       }
     });
   }

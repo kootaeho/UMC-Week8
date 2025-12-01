@@ -12,6 +12,17 @@ export const bodyToUser = (body) => {
   };
 };
 
+export const bodyToUserUpdate = (body) => {
+  const updates = {};
+  if (body.name !== undefined) updates.name = body.name;
+  if (body.gender !== undefined) updates.gender = body.gender;
+  if (body.birth !== undefined) updates.birth = body.birth;
+  if (body.address !== undefined) updates.address = body.address;
+  if (body.detailAddress !== undefined) updates.detailAddress = body.detailAddress;
+  if (body.phoneNumber !== undefined) updates.phoneNumber = body.phoneNumber;
+  return updates;
+};
+
 export const responseFromUser = ({ user, preferences }) => {
   if (!user) return null;
   const u = Array.isArray(user) ? user[0] : user;
